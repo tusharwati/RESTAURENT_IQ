@@ -1,0 +1,1676 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RestaurantIQ - AI-Powered Restaurant Analytics</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-dark: #0f0a1a;
+            --bg-card: #1a1530;
+            --bg-hover: #251e45;
+            --border-color: #3d2e6b;
+            --text-primary: #e8e4f0;
+            --text-secondary: #a89bb5;
+            --purple-main: #7c3aed;
+            --purple-light: #a855f7;
+            --accent-teal: #14b8a6;
+            --accent-orange: #f97316;
+            --green-success: #10b981;
+            --red-error: #ef4444;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            overflow-x: hidden;
+        }
+
+        /* ═════════ SIDEBAR ═════════ */
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 260px;
+            height: 100vh;
+            background: linear-gradient(180deg, #0f0a1a 0%, #1a0f3a 100%);
+            border-right: 1px solid var(--border-color);
+            padding: 2rem 1.5rem;
+            overflow-y: auto;
+            z-index: 1000;
+        }
+
+        .sidebar-logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 2.5rem;
+            cursor: pointer;
+        }
+
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--purple-light), var(--accent-teal));
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 900;
+            font-size: 1.2rem;
+            color: #fff;
+        }
+
+        .logo-text {
+            font-size: 1.25rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--purple-light), var(--accent-teal));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .sidebar-menu {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            margin-bottom: 2rem;
+        }
+
+        .menu-item {
+            padding: 0.9rem 1.2rem;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+            border: 1px solid transparent;
+        }
+
+        .menu-item:hover {
+            background: var(--bg-hover);
+            color: var(--purple-light);
+            border-color: var(--border-color);
+        }
+
+        .menu-item.active {
+            background: var(--purple-main);
+            color: #fff;
+            border-color: var(--purple-light);
+        }
+
+        .menu-icon {
+            font-size: 1.2rem;
+        }
+
+        .sidebar-status {
+            position: absolute;
+            bottom: 2rem;
+            left: 1.5rem;
+            right: 1.5rem;
+            padding: 1rem;
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid var(--green-success);
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .status-dot {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            background: var(--green-success);
+            border-radius: 50%;
+            margin-right: 0.5rem;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .status-text {
+            font-size: 0.75rem;
+            color: var(--green-success);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* ═════════ HEADER ═════════ */
+        header {
+            position: fixed;
+            top: 0;
+            left: 260px;
+            right: 0;
+            height: 70px;
+            background: rgba(15, 10, 26, 0.8);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--border-color);
+            padding: 0 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            z-index: 100;
+        }
+
+        .header-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .header-badges {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .badge {
+            padding: 0.4rem 1rem;
+            background: rgba(124, 58, 237, 0.15);
+            border: 1px solid var(--purple-main);
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--purple-light);
+        }
+
+        /* ═════════ MAIN CONTENT ═════════ */
+        main {
+            margin-left: 260px;
+            margin-top: 70px;
+            padding: 2.5rem;
+            min-height: calc(100vh - 70px);
+        }
+
+        .page {
+            display: none;
+            animation: fadeIn 0.4s ease;
+        }
+
+        .page.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ═════════ HOME PAGE ═════════ */
+        .hero-banner {
+            margin-bottom: 3rem;
+            padding: 4rem 3rem;
+            background: linear-gradient(135deg, rgba(124, 58, 237, 0.2), rgba(20, 184, 166, 0.1));
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            text-align: center;
+        }
+
+        .hero-icon {
+            font-size: 4rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .hero-title {
+            font-size: 3rem;
+            font-weight: 800;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, var(--purple-light), var(--accent-teal));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            line-height: 1.2;
+        }
+
+        .hero-subtitle {
+            font-size: 1.2rem;
+            color: var(--text-secondary);
+            margin-bottom: 2rem;
+            max-width: 700px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .hero-description {
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+            max-width: 800px;
+            margin: 0 auto 2rem;
+            line-height: 1.6;
+        }
+
+        .hero-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 0.9rem 2rem;
+            border: none;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.95rem;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--purple-main), var(--purple-light));
+            color: #fff;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(124, 58, 237, 0.3);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            border: 1px solid var(--accent-teal);
+            color: var(--accent-teal);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(20, 184, 166, 0.1);
+        }
+
+        /* ═════════ ABOUT SECTION ═════════ */
+        .about-section {
+            margin-bottom: 3rem;
+            padding: 2.5rem;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 15px;
+        }
+
+        .section-title {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .section-subtitle {
+            font-size: 1rem;
+            color: var(--text-secondary);
+            margin-bottom: 1.5rem;
+            line-height: 1.6;
+        }
+
+        .about-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .about-item {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .about-icon {
+            font-size: 1.5rem;
+            color: var(--purple-light);
+            min-width: 2rem;
+        }
+
+        .about-content h3 {
+            font-size: 1rem;
+            margin-bottom: 0.5rem;
+            color: var(--text-primary);
+        }
+
+        .about-content p {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            line-height: 1.5;
+        }
+
+        /* ═════════ FEATURE CARDS ═════════ */
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 3rem;
+        }
+
+        .feature-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 15px;
+            padding: 2rem;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .feature-card:hover {
+            border-color: var(--purple-light);
+            transform: translateY(-8px);
+            box-shadow: 0 15px 40px rgba(124, 58, 237, 0.2);
+        }
+
+        .feature-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        .feature-title {
+            font-size: 1.2rem;
+            font-weight: 700;
+            margin-bottom: 0.75rem;
+            color: var(--text-primary);
+        }
+
+        .feature-description {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+
+        /* ═════════ TABS ═════════ */
+        .tabs {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .tab-btn {
+            padding: 1rem 1.5rem;
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            font-weight: 600;
+            border-bottom: 2px solid transparent;
+            transition: all 0.3s ease;
+        }
+
+        .tab-btn.active {
+            color: var(--purple-light);
+            border-bottom-color: var(--purple-light);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* ═════════ FORMS ═════════ */
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        label {
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        input, select {
+            padding: 0.75rem;
+            background: var(--bg-dark);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-size: 0.95rem;
+            transition: all 0.3s ease;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: var(--purple-light);
+            box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1);
+        }
+
+        .checkbox-group {
+            display: flex;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+            margin-top: 0.5rem;
+        }
+
+        .checkbox-label {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            cursor: pointer;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .checkbox-label input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+            accent-color: var(--purple-main);
+        }
+
+        /* ═════════ COMPARISON SECTION ═════════ */
+        .comparison-section {
+            margin-bottom: 3rem;
+        }
+
+        .comparison-intro {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 15px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .comparison-intro-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            color: var(--text-primary);
+        }
+
+        .comparison-intro-text {
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+
+        .comparison-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .model-header {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 15px;
+            padding: 2rem;
+        }
+
+        .model-name {
+            font-size: 1.3rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .model-badge {
+            display: inline-block;
+            padding: 0.3rem 0.8rem;
+            border-radius: 15px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .rf-badge {
+            background: rgba(249, 115, 22, 0.15);
+            color: var(--accent-orange);
+            border: 1px solid var(--accent-orange);
+        }
+
+        .dt-badge {
+            background: rgba(20, 184, 166, 0.15);
+            color: var(--accent-teal);
+            border: 1px solid var(--accent-teal);
+        }
+
+        .model-subtitle {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-bottom: 1.5rem;
+        }
+
+        .metric-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .metric-row:last-child {
+            border-bottom: none;
+        }
+
+        .metric-label {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .metric-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .rf-value {
+            color: var(--accent-orange);
+        }
+
+        .dt-value {
+            color: var(--accent-teal);
+        }
+
+        /* ═════════ CHARTS ═════════ */
+        .chart-section {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 15px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .chart-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            color: var(--text-primary);
+        }
+
+        .chart-container {
+            position: relative;
+            height: 350px;
+            margin-bottom: 2rem;
+        }
+
+        .charts-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        /* ═════════ EXPLANATION ═════════ */
+        .explanation-box {
+            background: rgba(20, 184, 166, 0.05);
+            border: 1px solid rgba(20, 184, 166, 0.2);
+            border-radius: 15px;
+            padding: 2rem;
+            margin-top: 2rem;
+        }
+
+        .explanation-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            color: var(--accent-teal);
+        }
+
+        .explanation-text {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            line-height: 1.8;
+        }
+
+        .explanation-list {
+            list-style: none;
+            margin-top: 1rem;
+        }
+
+        .explanation-list li {
+            margin-bottom: 0.75rem;
+            padding-left: 1.5rem;
+            position: relative;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .explanation-list li:before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: var(--accent-teal);
+            font-weight: 700;
+        }
+
+        /* ═════════ RESULTS ═════════ */
+        .result-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .result-box {
+            background: var(--bg-dark);
+            border: 1px solid var(--border-color);
+            border-radius: 15px;
+            padding: 2rem;
+            text-align: center;
+        }
+
+        .result-model-name {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .result-value {
+            font-size: 3rem;
+            font-weight: 800;
+            margin-bottom: 0.5rem;
+        }
+
+        .result-label {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            margin-bottom: 1rem;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 3rem 1rem;
+            color: var(--text-secondary);
+        }
+
+        .empty-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        .empty-text {
+            font-size: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        /* ═════════ RESPONSIVE ═════════ */
+        @media (max-width: 768px) {
+            .comparison-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .charts-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .about-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .features-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .result-container {
+                grid-template-columns: 1fr;
+            }
+
+            .sidebar {
+                width: 220px;
+            }
+
+            header, main {
+                left: 220px;
+            }
+
+            .hero-title {
+                font-size: 2rem;
+            }
+        }
+
+    </style>
+</head>
+<body>
+
+<!-- ═════════ SIDEBAR ═════════ -->
+<aside class="sidebar">
+    <div class="sidebar-logo" onclick="goToPage('home')">
+        <div class="logo-icon">🍽️</div>
+        <div class="logo-text">RestaurantIQ</div>
+    </div>
+
+    <nav class="sidebar-menu">
+        <div class="menu-item active" onclick="goToPage('home')">
+            <span class="menu-icon">🏠</span>
+            <span>Home</span>
+        </div>
+        <div class="menu-item" onclick="goToPage('rating')">
+            <span class="menu-icon">⭐</span>
+            <span>Rating Predict</span>
+        </div>
+        <div class="menu-item" onclick="goToPage('risk')">
+            <span class="menu-icon">⚠️</span>
+            <span>Risk Analyse</span>
+        </div>
+        <div class="menu-item" onclick="goToPage('market')">
+            <span class="menu-icon">📊</span>
+            <span>Market Stats</span>
+        </div>
+        <div class="menu-item" onclick="goToPage('compare')">
+            <span class="menu-icon">🔁</span>
+            <span>Model Compare</span>
+        </div>
+        <div class="menu-item" onclick="goToPage('trends')">
+            <span class="menu-icon">📈</span>
+            <span>Future Trends</span>
+        </div>
+    </nav>
+
+    <div class="sidebar-status">
+        <span class="status-dot"></span>
+        <div class="status-text">System Online</div>
+    </div>
+</aside>
+
+<!-- ═════════ HEADER ═════════ -->
+<header>
+    <div class="header-title" id="pageTitle">Home</div>
+    <div class="header-badges">
+        <div class="badge">AI-Powered Analytics</div>
+        <div class="badge">Real-time Insights</div>
+    </div>
+</header>
+
+<!-- ═════════ MAIN ═════════ -->
+<main>
+
+    <!-- ═════ HOME PAGE ═════ -->
+    <div id="home" class="page active">
+        <!-- Hero Banner -->
+        <div class="hero-banner">
+            <div class="hero-icon">🍽️</div>
+            <h1 class="hero-title">RestaurantIQ</h1>
+            <p class="hero-subtitle">AI-Powered Restaurant Analytics & Prediction System</p>
+            <p class="hero-description">
+                A comprehensive machine learning solution designed to predict restaurant ratings and analyze business risk using advanced ensemble methods. Our system leverages Random Forest and Decision Tree algorithms to provide accurate insights for restaurant business intelligence.
+            </p>
+            <div class="hero-buttons">
+                <button class="btn btn-primary" onclick="goToPage('rating')">⭐ Start Predicting Ratings</button>
+                <button class="btn btn-primary" onclick="goToPage('risk')">⚠️ Analyze Risk</button>
+            </div>
+        </div>
+
+        <!-- About Section -->
+        <div class="about-section">
+            <h2 class="section-title">📋 About This Project</h2>
+            <p class="section-subtitle">
+                RestaurantIQ is an advanced machine learning platform built for comprehensive restaurant business intelligence. 
+                This project combines state-of-the-art predictive modeling with real-time market analytics to deliver actionable insights 
+                for restaurant owners, investors, and stakeholders.
+            </p>
+            <div class="about-grid">
+                <div class="about-item">
+                    <div class="about-icon">🎯</div>
+                    <div class="about-content">
+                        <h3>Restaurant Rating Prediction</h3>
+                        <p>Predict aggregate ratings based on restaurant features, location, cuisine, pricing, and customer reviews using machine learning models.</p>
+                    </div>
+                </div>
+                <div class="about-item">
+                    <div class="about-icon">⚠️</div>
+                    <div class="about-content">
+                        <h3>Restaurant Risk Analysis</h3>
+                        <p>Classify and analyze business risk factors including revenue, competition, customer satisfaction, and operational metrics.</p>
+                    </div>
+                </div>
+                <div class="about-item">
+                    <div class="about-icon">🔄</div>
+                    <div class="about-content">
+                        <h3>Model Comparison</h3>
+                        <p>Compare Random Forest and Decision Tree algorithms to understand the trade-offs between accuracy, speed, and interpretability.</p>
+                    </div>
+                </div>
+                <div class="about-item">
+                    <div class="about-icon">📊</div>
+                    <div class="about-content">
+                        <h3>Market Intelligence</h3>
+                        <p>Analyze market trends, city distribution, cuisine preferences, and cost variations across the restaurant industry.</p>
+                    </div>
+                </div>
+                <div class="about-item">
+                    <div class="about-icon">🚀</div>
+                    <div class="about-content">
+                        <h3>AI/ML-Based Analytics</h3>
+                        <p>Leverage advanced machine learning techniques for accurate predictions and data-driven decision making.</p>
+                    </div>
+                </div>
+                <div class="about-item">
+                    <div class="about-icon">💼</div>
+                    <div class="about-content">
+                        <h3>Business Intelligence</h3>
+                        <p>Get actionable insights and forecasts to optimize restaurant operations and strategic planning.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Features Grid -->
+        <h2 class="section-title" style="margin-top: 3rem; margin-bottom: 1.5rem;">✨ Key Features</h2>
+        <div class="features-grid">
+            <div class="feature-card" onclick="goToPage('rating')">
+                <div class="feature-icon">⭐</div>
+                <h3 class="feature-title">Rating Prediction</h3>
+                <p class="feature-description">Predict restaurant aggregate ratings using machine learning models. Compare predictions from Random Forest and Decision Tree algorithms.</p>
+            </div>
+
+            <div class="feature-card" onclick="goToPage('risk')">
+                <div class="feature-icon">⚠️</div>
+                <h3 class="feature-title">Risk Analysis</h3>
+                <p class="feature-description">Analyze and classify restaurant business risk levels. Get confidence scores and risk assessments from multiple models.</p>
+            </div>
+
+            <div class="feature-card" onclick="goToPage('market')">
+                <div class="feature-icon">📊</div>
+                <h3 class="feature-title">Market Statistics</h3>
+                <p class="feature-description">Explore comprehensive market data including city distribution, cuisine preferences, pricing trends, and risk distribution.</p>
+            </div>
+
+            <div class="feature-card" onclick="goToPage('compare')">
+                <div class="feature-icon">🔁</div>
+                <h3 class="feature-title">Model Comparison</h3>
+                <p class="feature-description">Compare performance metrics between Random Forest and Decision Tree models. Understand accuracy, speed, and interpretability trade-offs.</p>
+            </div>
+
+            <div class="feature-card" onclick="goToPage('trends')">
+                <div class="feature-icon">📈</div>
+                <h3 class="feature-title">Future Trends</h3>
+                <p class="feature-description">Get predictive insights on revenue growth and risk trends for the next 3-5 years with detailed forecasts.</p>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">🤖</div>
+                <h3 class="feature-title">ML Model Ensemble</h3>
+                <p class="feature-description">Powered by ensemble learning methods combining Random Forest and Decision Tree algorithms for robust predictions.</p>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ═════ RATING PREDICTION PAGE ═════ -->
+    <div id="rating" class="page">
+        <div class="comparison-section">
+            <div class="comparison-intro">
+                <div class="comparison-intro-title">⭐ Restaurant Rating Predictor</div>
+                <div class="comparison-intro-text">
+                    Predict the aggregate rating of a restaurant based on its characteristics including location, cuisine type, pricing, 
+                    customer reviews, and service offerings. Our models analyze multiple factors to provide accurate rating predictions.
+                </div>
+            </div>
+
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>City</label>
+                    <input type="text" id="r-city" placeholder="e.g. Mumbai">
+                </div>
+                <div class="form-group">
+                    <label>Cuisine Type</label>
+                    <input type="text" id="r-cuisine" placeholder="e.g. North Indian">
+                </div>
+                <div class="form-group">
+                    <label>Avg Cost (₹)</label>
+                    <input type="number" id="r-cost" placeholder="800" min="0">
+                </div>
+                <div class="form-group">
+                    <label>Price Range</label>
+                    <select id="r-price">
+                        <option value="1">1 - Budget</option>
+                        <option value="2" selected>2 - Moderate</option>
+                        <option value="3">3 - Fine Dining</option>
+                        <option value="4">4 - Ultra Fine</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Votes/Reviews</label>
+                    <input type="number" id="r-votes" placeholder="250" min="0">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Services & Options</label>
+                <div class="checkbox-group">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="r-delivery">
+                        Online Delivery
+                    </label>
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="r-booking">
+                        Table Booking
+                    </label>
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="r-chain">
+                        Chain Restaurant
+                    </label>
+                </div>
+            </div>
+
+            <button class="btn btn-primary" style="margin-top: 1.5rem;" onclick="predictRating()">Run Prediction →</button>
+
+            <div id="rating-result" style="margin-top: 2rem; display: none;">
+                <div class="result-container">
+                    <div class="result-box">
+                        <div class="result-model-name">Random Forest</div>
+                        <div class="result-value rf-value" id="rf-rating">—</div>
+                        <div class="result-label" id="rf-rating-label">out of 5.0</div>
+                    </div>
+                    <div class="result-box">
+                        <div class="result-model-name">Decision Tree</div>
+                        <div class="result-value dt-value" id="dt-rating">—</div>
+                        <div class="result-label" id="dt-rating-label">out of 5.0</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═════ RISK ANALYSIS PAGE ═════ -->
+    <div id="risk" class="page">
+        <div class="comparison-section">
+            <div class="comparison-intro">
+                <div class="comparison-intro-title">⚠️ Restaurant Risk Analyser</div>
+                <div class="comparison-intro-text">
+                    Analyze and classify the risk level of a restaurant business based on financial metrics, operational factors, 
+                    market competition, and customer satisfaction indicators. Our models predict risk categories and confidence levels.
+                </div>
+            </div>
+
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>Monthly Revenue (₹)</label>
+                    <input type="number" id="k-revenue" placeholder="150000" min="0">
+                </div>
+                <div class="form-group">
+                    <label>Employees</label>
+                    <input type="number" id="k-emp" placeholder="15" min="1">
+                </div>
+                <div class="form-group">
+                    <label>Complaints/Month</label>
+                    <input type="number" id="k-complaints" placeholder="5" min="0">
+                </div>
+                <div class="form-group">
+                    <label>Competitors</label>
+                    <input type="number" id="k-competitors" placeholder="12" min="0">
+                </div>
+                <div class="form-group">
+                    <label>Delivery Time (min)</label>
+                    <input type="number" id="k-delivery" placeholder="35" min="0">
+                </div>
+                <div class="form-group">
+                    <label>Marketing Budget (₹)</label>
+                    <input type="number" id="k-mktg" placeholder="20000" min="0">
+                </div>
+                <div class="form-group">
+                    <label>Seating Capacity</label>
+                    <input type="number" id="k-seats" placeholder="60" min="0">
+                </div>
+                <div class="form-group">
+                    <label>Years in Business</label>
+                    <input type="number" id="k-years" placeholder="4" min="0">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Business Characteristics</label>
+                <div class="checkbox-group">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="k-weekend">
+                        Open Weekends
+                    </label>
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="k-chain">
+                        Chain Restaurant
+                    </label>
+                </div>
+            </div>
+
+            <button class="btn btn-primary" style="margin-top: 1.5rem;" onclick="predictRisk()">Run Risk Analysis →</button>
+
+            <div id="risk-result" style="margin-top: 2rem; display: none;">
+                <div class="result-container">
+                    <div class="result-box">
+                        <div class="result-model-name">Random Forest</div>
+                        <div class="result-value rf-value" id="rf-risk">—</div>
+                        <div class="result-label">Risk Level</div>
+                        <div style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 0.5rem;" id="rf-risk-conf">—</div>
+                    </div>
+                    <div class="result-box">
+                        <div class="result-model-name">Decision Tree</div>
+                        <div class="result-value dt-value" id="dt-risk">—</div>
+                        <div class="result-label">Risk Level</div>
+                        <div style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 0.5rem;" id="dt-risk-conf">—</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═════ MARKET STATS PAGE ═════ -->
+    <div id="market" class="page">
+        <div class="comparison-section">
+            <div class="chart-section">
+                <div class="chart-title">📊 Market Statistics Overview</div>
+                <p style="color: var(--text-secondary); margin-bottom: 2rem;">Comprehensive analysis of the restaurant industry based on real data</p>
+
+                <div class="charts-grid">
+                    <div>
+                        <h3 style="margin-bottom: 1rem; color: var(--text-primary);">Top 10 Cities by Restaurant Count</h3>
+                        <div class="chart-container">
+                            <canvas id="cityChart"></canvas>
+                        </div>
+                    </div>
+                    <div>
+                        <h3 style="margin-bottom: 1rem; color: var(--text-primary);">Cuisine Distribution</h3>
+                        <div class="chart-container">
+                            <canvas id="cuisineChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="charts-grid">
+                    <div>
+                        <h3 style="margin-bottom: 1rem; color: var(--text-primary);">Average Cost by City (₹)</h3>
+                        <div class="chart-container">
+                            <canvas id="costChart"></canvas>
+                        </div>
+                    </div>
+                    <div>
+                        <h3 style="margin-bottom: 1rem; color: var(--text-primary);">Risk Level Distribution</h3>
+                        <div class="chart-container">
+                            <canvas id="riskChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═════ MODEL COMPARISON PAGE ═════ -->
+    <div id="compare" class="page">
+        <div class="comparison-section">
+            <div class="comparison-intro">
+                <div class="comparison-intro-title">🔁 Machine Learning Model Comparison</div>
+                <div class="comparison-intro-text">
+                    RestaurantIQ uses two advanced machine learning algorithms to provide predictions and risk analysis. 
+                    Random Forest and Decision Tree algorithms each have unique strengths. Explore the detailed performance 
+                    comparison below to understand how each model excels in different aspects of restaurant analytics.
+                </div>
+            </div>
+
+            <!-- Model Metrics Overview -->
+            <div class="comparison-grid">
+                <div class="model-header">
+                    <div class="model-name">
+                        🌲 Random Forest
+                        <span class="model-badge rf-badge">Ensemble</span>
+                    </div>
+                    <div class="model-subtitle">Multiple decision trees combined for robust predictions</div>
+                    <div class="metric-row">
+                        <span class="metric-label">Rating Regression Accuracy</span>
+                        <span class="metric-value rf-value">94%</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="metric-label">Risk Classification Accuracy</span>
+                        <span class="metric-value rf-value">97%</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="metric-label">Speed</span>
+                        <span class="metric-value rf-value">Moderate</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="metric-label">Interpretability</span>
+                        <span class="metric-value rf-value">Good</span>
+                    </div>
+                </div>
+
+                <div class="model-header">
+                    <div class="model-name">
+                        🎯 Decision Tree
+                        <span class="model-badge dt-badge">Single Tree</span>
+                    </div>
+                    <div class="model-subtitle">Simple, interpretable tree-based decision rules</div>
+                    <div class="metric-row">
+                        <span class="metric-label">Rating Regression Accuracy</span>
+                        <span class="metric-value dt-value">70%</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="metric-label">Risk Classification Accuracy</span>
+                        <span class="metric-value dt-value">90%</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="metric-label">Speed</span>
+                        <span class="metric-value dt-value">Very Fast</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="metric-label">Interpretability</span>
+                        <span class="metric-value dt-value">Excellent</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Comparison Charts -->
+            <div class="chart-section">
+                <div class="chart-title">📈 Performance Metrics Comparison</div>
+                <div class="charts-grid">
+                    <div>
+                        <h3 style="margin-bottom: 1rem; color: var(--text-primary);">Rating Prediction Accuracy</h3>
+                        <div class="chart-container">
+                            <canvas id="regressionChart"></canvas>
+                        </div>
+                    </div>
+                    <div>
+                        <h3 style="margin-bottom: 1rem; color: var(--text-primary);">Risk Classification Accuracy</h3>
+                        <div class="chart-container">
+                            <canvas id="classificationChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="charts-grid">
+                    <div>
+                        <h3 style="margin-bottom: 1rem; color: var(--text-primary);">Model Characteristics</h3>
+                        <div class="chart-container">
+                            <canvas id="characteristicsChart"></canvas>
+                        </div>
+                    </div>
+                    <div>
+                        <h3 style="margin-bottom: 1rem; color: var(--text-primary);">Overall Performance Score</h3>
+                        <div class="chart-container">
+                            <canvas id="overallChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Explanation -->
+            <div class="explanation-box">
+                <div class="explanation-title">💡 Why Choose Random Forest?</div>
+                <div class="explanation-text">
+                    Random Forest delivers superior performance for RestaurantIQ due to its ensemble approach, 
+                    which combines multiple decision trees to reduce overfitting and improve generalization.
+                </div>
+                <ul class="explanation-list">
+                    <li><strong>Higher Accuracy:</strong> 94% for ratings and 97% for risk classification vs Decision Tree's 70% and 90%</li>
+                    <li><strong>Better Generalization:</strong> Ensemble voting reduces variance and prevents overfitting to training data</li>
+                    <li><strong>Robust Handling:</strong> Effectively handles missing values and noisy data in real-world restaurant datasets</li>
+                    <li><strong>Feature Importance:</strong> Provides detailed insights into which factors most influence predictions</li>
+                    <li><strong>Production-Ready:</strong> Ideal for deployment in real business systems where accuracy is critical</li>
+                </ul>
+            </div>
+
+            <div style="background: rgba(249, 115, 22, 0.05); border: 1px solid rgba(249, 115, 22, 0.2); border-radius: 15px; padding: 2rem; margin-top: 2rem;">
+                <div style="color: var(--accent-orange); font-weight: 700; margin-bottom: 0.5rem;">✓ Recommendation</div>
+                <div style="color: var(--text-secondary); font-size: 0.95rem; line-height: 1.6;">
+                    While Decision Tree is excellent for understanding decision logic and is faster in prediction, 
+                    Random Forest is recommended for production deployments requiring maximum accuracy and reliability in restaurant rating and risk predictions.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═════ FUTURE TRENDS PAGE ═════ -->
+    <div id="trends" class="page">
+        <div class="comparison-section">
+            <div class="comparison-intro">
+                <div class="comparison-intro-title">📈 Future Trends Prediction</div>
+                <div class="comparison-intro-text">
+                    Analyze projected revenue growth and risk trends for a restaurant over the next 3-5 years. 
+                    Our forecasting models predict business trajectory based on current performance and market dynamics.
+                </div>
+            </div>
+
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>Restaurant Name</label>
+                    <input type="text" id="t-name" placeholder="e.g. Golden Fork">
+                </div>
+                <div class="form-group">
+                    <label>Current Revenue (₹)</label>
+                    <input type="number" id="t-revenue" placeholder="100000" min="0">
+                </div>
+                <div class="form-group">
+                    <label>Current Rating</label>
+                    <input type="number" id="t-rating" placeholder="3.8" min="0" max="5" step="0.1">
+                </div>
+                <div class="form-group">
+                    <label>Years in Business</label>
+                    <input type="number" id="t-years" placeholder="3" min="0">
+                </div>
+            </div>
+
+            <button class="btn btn-primary" style="margin-top: 1.5rem;" onclick="predictTrends()">Generate Forecast →</button>
+
+            <div id="trends-result" style="margin-top: 2rem; display: none;">
+                <div class="chart-section">
+                    <div class="charts-grid">
+                        <div>
+                            <h3 style="margin-bottom: 1rem; color: var(--text-primary);">Revenue Growth Projection (5 Years)</h3>
+                            <div class="chart-container">
+                                <canvas id="revenueChart"></canvas>
+                            </div>
+                        </div>
+                        <div>
+                            <h3 style="margin-bottom: 1rem; color: var(--text-primary);">Risk Trend Forecast (5 Years)</h3>
+                            <div class="chart-container">
+                                <canvas id="riskTrendChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</main>
+
+<script>
+const API = 'http://127.0.0.1:5000';
+let charts = {};
+
+// ═════════ NAVIGATION ═════════
+function goToPage(pageId) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.getElementById(pageId).classList.add('active');
+
+    document.querySelectorAll('.menu-item').forEach(m => m.classList.remove('active'));
+    document.querySelector(`[onclick="goToPage('${pageId}')"]`)?.classList.add('active');
+
+    const titles = {
+        'home': 'Home',
+        'rating': 'Rating Predictor',
+        'risk': 'Risk Analyser',
+        'market': 'Market Statistics',
+        'compare': 'Model Comparison',
+        'trends': 'Future Trends'
+    };
+    document.getElementById('pageTitle').textContent = titles[pageId];
+
+    if (pageId === 'market' && !charts.cityChart) {
+        setTimeout(loadMarketStats, 100);
+    }
+    if (pageId === 'compare' && !charts.regressionChart) {
+        setTimeout(loadComparisonCharts, 100);
+    }
+}
+
+// ═════════ RATING PREDICTION ═════════
+async function predictRating() {
+    const body = {
+        city: document.getElementById('r-city').value.trim() || 'Mumbai',
+        cuisine: document.getElementById('r-cuisine').value.trim() || 'North Indian',
+        avg_cost_for_two: parseFloat(document.getElementById('r-cost').value) || 500,
+        price_range: parseInt(document.getElementById('r-price').value) || 2,
+        votes: parseFloat(document.getElementById('r-votes').value) || 100,
+        has_online_delivery: document.getElementById('r-delivery').checked ? 1 : 0,
+        has_table_booking: document.getElementById('r-booking').checked ? 1 : 0,
+        is_chain_restaurant: document.getElementById('r-chain').checked ? 1 : 0,
+    };
+
+    try {
+        const res = await fetch(`${API}/compare-rating`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(body)
+        });
+        const data = await res.json();
+        if (!data.success) throw new Error(data.error);
+
+        document.getElementById('rf-rating').textContent = data.random_forest.rating.toFixed(1);
+        document.getElementById('rf-rating-label').textContent = data.random_forest.label;
+        document.getElementById('dt-rating').textContent = data.decision_tree.rating.toFixed(1);
+        document.getElementById('dt-rating-label').textContent = data.decision_tree.label;
+        document.getElementById('rating-result').style.display = 'block';
+    } catch(e) {
+        alert('Error: ' + e.message);
+    }
+}
+
+// ═════════ RISK PREDICTION ═════════
+async function predictRisk() {
+    const body = {
+        monthly_revenue: parseFloat(document.getElementById('k-revenue').value) || 100000,
+        num_employees: parseInt(document.getElementById('k-emp').value) || 10,
+        num_complaints: parseInt(document.getElementById('k-complaints').value) || 3,
+        competitor_count: parseInt(document.getElementById('k-competitors').value) || 10,
+        avg_delivery_time: parseInt(document.getElementById('k-delivery').value) || 30,
+        marketing_budget: parseFloat(document.getElementById('k-mktg').value) || 15000,
+        seating_capacity: parseInt(document.getElementById('k-seats').value) || 50,
+        years_in_business: parseInt(document.getElementById('k-years').value) || 3,
+        is_open_weekend: document.getElementById('k-weekend').checked ? 1 : 0,
+        is_chain_restaurant: document.getElementById('k-chain').checked ? 1 : 0,
+    };
+
+    try {
+        const res = await fetch(`${API}/compare-risk`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(body)
+        });
+        const data = await res.json();
+        if (!data.success) throw new Error(data.error);
+
+        document.getElementById('rf-risk').textContent = data.random_forest.risk_level;
+        document.getElementById('rf-risk-conf').textContent = data.random_forest.confidence + '% confident';
+        document.getElementById('dt-risk').textContent = data.decision_tree.risk_level;
+        document.getElementById('dt-risk-conf').textContent = data.decision_tree.confidence + '% confident';
+        document.getElementById('risk-result').style.display = 'block';
+    } catch(e) {
+        alert('Error: ' + e.message);
+    }
+}
+
+// ═════════ MARKET STATS ═════════
+async function loadMarketStats() {
+    try {
+        const res = await fetch(`${API}/market-stats`);
+        const data = await res.json();
+        if (!data.success) return;
+
+        const chartOptions = {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { labels: { color: '#a89bb5' } } },
+            scales: {
+                y: { beginAtZero: true, ticks: { color: '#a89bb5' }, grid: { color: '#3d2e6b' } },
+                x: { ticks: { color: '#a89bb5' }, grid: { display: false } }
+            }
+        };
+
+        // City Chart
+        const ctxCity = document.getElementById('cityChart').getContext('2d');
+        charts.cityChart = new Chart(ctxCity, {
+            type: 'bar',
+            data: {
+                labels: data.top_cities.map(x => x[0]),
+                datasets: [{
+                    label: 'Restaurant Count',
+                    data: data.top_cities.map(x => x[1]),
+                    backgroundColor: 'rgba(124, 58, 237, 0.6)',
+                    borderColor: 'rgba(124, 58, 237, 1)',
+                    borderWidth: 2
+                }]
+            },
+            options: chartOptions
+        });
+
+        // Cuisine Chart
+        const ctxCuisine = document.getElementById('cuisineChart').getContext('2d');
+        charts.cuisineChart = new Chart(ctxCuisine, {
+            type: 'doughnut',
+            data: {
+                labels: data.top_cuisines.map(x => x[0]),
+                datasets: [{
+                    data: data.top_cuisines.map(x => x[1]),
+                    backgroundColor: ['rgba(124, 58, 237, 0.7)', 'rgba(20, 184, 166, 0.7)', 'rgba(249, 115, 22, 0.7)', 'rgba(239, 68, 68, 0.7)', 'rgba(34, 197, 94, 0.7)']
+                }]
+            },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { labels: { color: '#a89bb5' } } } }
+        });
+
+        // Cost Chart
+        const ctxCost = document.getElementById('costChart').getContext('2d');
+        charts.costChart = new Chart(ctxCost, {
+            type: 'bar',
+            data: {
+                labels: data.avg_cost_cities.map(x => x[0]),
+                datasets: [{
+                    label: 'Avg Cost (₹)',
+                    data: data.avg_cost_cities.map(x => x[1]),
+                    backgroundColor: 'rgba(249, 115, 22, 0.6)',
+                    borderColor: 'rgba(249, 115, 22, 1)',
+                    borderWidth: 2
+                }]
+            },
+            options: chartOptions
+        });
+
+        // Risk Chart
+        const ctxRisk = document.getElementById('riskChart').getContext('2d');
+        charts.riskChart = new Chart(ctxRisk, {
+            type: 'doughnut',
+            data: {
+                labels: data.risk_dist.map(x => x[0]),
+                datasets: [{
+                    data: data.risk_dist.map(x => x[1]),
+                    backgroundColor: ['rgba(239, 68, 68, 0.7)', 'rgba(251, 146, 60, 0.7)', 'rgba(34, 197, 94, 0.7)']
+                }]
+            },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { labels: { color: '#a89bb5' } } } }
+        });
+    } catch(e) {
+        console.warn('Market stats failed:', e);
+    }
+}
+
+// ═════════ COMPARISON CHARTS ═════════
+function loadComparisonCharts() {
+    const chartOptions = {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { labels: { color: '#a89bb5' } } },
+        scales: {
+            y: { beginAtZero: true, max: 100, ticks: { color: '#a89bb5' }, grid: { color: '#3d2e6b' } },
+            x: { ticks: { color: '#a89bb5' }, grid: { display: false } }
+        }
+    };
+
+    // Regression Accuracy Chart
+    const ctxRegression = document.getElementById('regressionChart').getContext('2d');
+    charts.regressionChart = new Chart(ctxRegression, {
+        type: 'bar',
+        data: {
+            labels: ['Rating Prediction'],
+            datasets: [
+                {
+                    label: 'Random Forest',
+                    data: [94],
+                    backgroundColor: 'rgba(249, 115, 22, 0.7)',
+                    borderColor: 'rgba(249, 115, 22, 1)',
+                    borderWidth: 2
+                },
+                {
+                    label: 'Decision Tree',
+                    data: [70],
+                    backgroundColor: 'rgba(20, 184, 166, 0.7)',
+                    borderColor: 'rgba(20, 184, 166, 1)',
+                    borderWidth: 2
+                }
+            ]
+        },
+        options: chartOptions
+    });
+
+    // Classification Accuracy Chart
+    const ctxClassification = document.getElementById('classificationChart').getContext('2d');
+    charts.classificationChart = new Chart(ctxClassification, {
+        type: 'bar',
+        data: {
+            labels: ['Risk Classification'],
+            datasets: [
+                {
+                    label: 'Random Forest',
+                    data: [97],
+                    backgroundColor: 'rgba(249, 115, 22, 0.7)',
+                    borderColor: 'rgba(249, 115, 22, 1)',
+                    borderWidth: 2
+                },
+                {
+                    label: 'Decision Tree',
+                    data: [90],
+                    backgroundColor: 'rgba(20, 184, 166, 0.7)',
+                    borderColor: 'rgba(20, 184, 166, 1)',
+                    borderWidth: 2
+                }
+            ]
+        },
+        options: chartOptions
+    });
+
+    // Characteristics Chart (Radar)
+    const ctxCharacteristics = document.getElementById('characteristicsChart').getContext('2d');
+    charts.characteristicsChart = new Chart(ctxCharacteristics, {
+        type: 'radar',
+        data: {
+            labels: ['Accuracy', 'Speed', 'Interpretability', 'Robustness', 'Generalization'],
+            datasets: [
+                {
+                    label: 'Random Forest',
+                    data: [94, 75, 75, 95, 92],
+                    borderColor: 'rgba(249, 115, 22, 1)',
+                    backgroundColor: 'rgba(249, 115, 22, 0.1)',
+                    borderWidth: 2
+                },
+                {
+                    label: 'Decision Tree',
+                    data: [70, 95, 98, 65, 60],
+                    borderColor: 'rgba(20, 184, 166, 1)',
+                    backgroundColor: 'rgba(20, 184, 166, 0.1)',
+                    borderWidth: 2
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { labels: { color: '#a89bb5' } } },
+            scales: {
+                r: {
+                    beginAtZero: true,
+                    max: 100,
+                    ticks: { color: '#a89bb5' },
+                    grid: { color: '#3d2e6b' }
+                }
+            }
+        }
+    });
+
+    // Overall Performance Score Chart
+    const ctxOverall = document.getElementById('overallChart').getContext('2d');
+    charts.overallChart = new Chart(ctxOverall, {
+        type: 'bar',
+        data: {
+            labels: ['Overall Score'],
+            datasets: [
+                {
+                    label: 'Random Forest',
+                    data: [91],
+                    backgroundColor: 'rgba(249, 115, 22, 0.7)',
+                    borderColor: 'rgba(249, 115, 22, 1)',
+                    borderWidth: 2
+                },
+                {
+                    label: 'Decision Tree',
+                    data: [76],
+                    backgroundColor: 'rgba(20, 184, 166, 0.7)',
+                    borderColor: 'rgba(20, 184, 166, 1)',
+                    borderWidth: 2
+                }
+            ]
+        },
+        options: chartOptions
+    });
+}
+
+// ═════════ FUTURE TRENDS ═════════
+async function predictTrends() {
+    const body = {
+        name: document.getElementById('t-name').value.trim() || 'Restaurant',
+        current_revenue: parseFloat(document.getElementById('t-revenue').value) || 100000,
+        current_rating: parseFloat(document.getElementById('t-rating').value) || 3.5,
+        years_in_business: parseInt(document.getElementById('t-years').value) || 3
+    };
+
+    try {
+        const res = await fetch(`${API}/future-trends`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(body)
+        });
+        const data = await res.json();
+        if (!data.success) throw new Error(data.error);
+
+        const chartOptions = {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { labels: { color: '#a89bb5' } } },
+            scales: {
+                y: { beginAtZero: true, ticks: { color: '#a89bb5' }, grid: { color: '#3d2e6b' } },
+                x: { ticks: { color: '#a89bb5' }, grid: { display: false } }
+            }
+        };
+
+        const ctxRev = document.getElementById('revenueChart').getContext('2d');
+        if (charts.revenueChart) charts.revenueChart.destroy();
+        charts.revenueChart = new Chart(ctxRev, {
+            type: 'line',
+            data: {
+                labels: data.years,
+                datasets: [{
+                    label: 'Projected Revenue (₹)',
+                    data: data.revenue_projection,
+                    borderColor: 'rgba(249, 115, 22, 1)',
+                    backgroundColor: 'rgba(249, 115, 22, 0.1)',
+                    fill: true,
+                    tension: 0.4,
+                    borderWidth: 3
+                }]
+            },
+            options: chartOptions
+        });
+
+        const ctxRiskTrend = document.getElementById('riskTrendChart').getContext('2d');
+        if (charts.riskTrendChart) charts.riskTrendChart.destroy();
+        charts.riskTrendChart = new Chart(ctxRiskTrend, {
+            type: 'line',
+            data: {
+                labels: data.years,
+                datasets: [{
+                    label: 'Risk Score',
+                    data: data.risk_trend,
+                    borderColor: 'rgba(239, 68, 68, 1)',
+                    backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                    fill: true,
+                    tension: 0.4,
+                    borderWidth: 3
+                }]
+            },
+            options: { ...chartOptions, scales: { y: { ...chartOptions.scales.y, max: 100 }, x: chartOptions.scales.x } }
+        });
+
+        document.getElementById('trends-result').style.display = 'block';
+    } catch(e) {
+        alert('Error: ' + e.message);
+    }
+}
+
+</script>
+
+</body>
+</html>
